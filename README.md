@@ -8,4 +8,4 @@ https://www.codeproject.com/Articles/693841/Making-Dashboards-with-Dc-js-Part-1-
 
 
 
-https://www.bumbeishvili.github.io/playing-with-dcjs/dc/
+https://bumbeishvili.github.io/playing-with-dcjs/dc/
