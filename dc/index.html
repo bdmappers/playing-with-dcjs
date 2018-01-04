@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <script src="d3.v3.min.js"></script>
+  <script src="crossfilter.js"></script>
+  <script src="dc.js"></script>
+  <link rel="stylesheet" type="text/css" href="dc.css">
+</head>
+
+<body>
+  <div id='site'></div>
+  <div id='freelancer'></div>
+  <div id='country'></div>
+
+  <script>
+    d3.json("data.json", d => {
+      var ndx = crossfilter(d);
+
+      var siteDim = ndx.dimension(d => d.site);
+      var siteTotal = siteDim.group().reduceSum(d => +d.payment);
+
+      var freelancerDim = ndx.dimension(d => d.employee);
+      var freelancerTotal = freelancerDim.group().reduceSum(d => +d.payment);
+
+      var countryDim = ndx.dimension(d => d.country);
+      var countryTotal = countryDim.group().reduceSum(d => +d.payment);
+
+
+      var siteChart = dc.pieChart('#site');
+      siteChart.dimension(siteDim)
+        .group(siteTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+      var freelancerChart = dc.pieChart('#freelancer');
+      freelancerChart.dimension(freelancerDim)
+        .group(freelancerTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+      var countryChart = dc.pieChart('#country');
+      countryChart.dimension(countryDim)
+        .group(countryTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+      dc.renderAll();
+
+    })
+
+
+
+
+
+    function print_filter(filter) {
+      if (typeof filter != 'function') console.log(filter);
+      var f = filter;
+      if (typeof (f.length) != "undefined") { } else { }
+      if (typeof (f.top) != "undefined") { f = f.top(Infinity); } else { }
+      if (typeof (f.dimension) != "undefined") { f = f.dimension(function (d) { return ""; }).top(Infinity); } else { }
+      console.table(f);
+    }
+
+  </script>
+</body>
+
+</html>
