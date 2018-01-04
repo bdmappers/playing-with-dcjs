@@ -7,12 +7,18 @@
   <script src="crossfilter.js"></script>
   <script src="dc.js"></script>
   <link rel="stylesheet" type="text/css" href="dc.css">
+  <style>
+    body div svg {
+      overflow: visible;
+    }
+  </style>
 </head>
 
 <body>
   <div id='site'></div>
   <div id='freelancer'></div>
   <div id='country'></div>
+  <div id='month'></div>
 
   <script>
     d3.json("data.json", d => {
@@ -27,6 +33,8 @@
       var countryDim = ndx.dimension(d => d.country);
       var countryTotal = countryDim.group().reduceSum(d => +d.payment);
 
+      var monthDimension = ndx.dimension(d => d.month)
+      var monthTotal = monthDimension.group().reduceSum(d => +d.payment)
 
       var siteChart = dc.pieChart('#site');
       siteChart.dimension(siteDim)
@@ -48,6 +56,15 @@
         .width(200)
         .height(200)
         .innerRadius(30)
+
+
+      var monthChart = dc.barChart('#month');
+      monthChart.width(600)
+        .height(200)
+        .dimension(monthDimension)
+        .group(monthTotal)
+        .x(d3.scale.ordinal())
+        .xUnits(dc.units.ordinal)
 
       dc.renderAll();
 
