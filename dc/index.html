@@ -6,24 +6,107 @@
   <script src="d3.v3.min.js"></script>
   <script src="crossfilter.js"></script>
   <script src="dc.js"></script>
+  <script src="d3-tip.min.js"></script>
+  <script src="dc-tooltip-mixin.js"></script>
   <link rel="stylesheet" type="text/css" href="dc.css">
+  <link rel="stylesheet" type="text/css" href="dc-tooltip-mixin.css">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="materialize.min.css">
+    
   <style>
     body div svg {
       overflow: visible;
     }
+
+    body{
+      margin:100px;
+    }
+
+    .card-content{
+      min-width:  300px;
+      min-height:300px;
+    
+    }
+
+    .chart-container{
+      margin:0 auto;
+    }
+   
   </style>
 </head>
 
 <body>
-  <div id='site'></div>
-  <div id='freelancer'></div>
-  <div id='country'></div>
-  <div id='month'></div>
+
+    <div class="row">
+        <div class="col s12 l3">
+          <div class="card teal   lighten-5">
+            <div class="card-content " >
+              <span class="card-title">Site</span>
+              <div class='chart-container' >
+                  <div id='site' ></div>
+              </div>
+            </div>
+           
+          </div>
+        </div>
+
+        <div class="col s12 l3">
+            <div class="card teal   lighten-5">
+              <div class="card-content " >
+                <span class="card-title">Employee</span>
+                <div class='chart-container' >
+                    <div id='freelancer' ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        <div class="col s12 l3">
+            <div class="card teal   lighten-5">
+              <div class="card-content  " >
+                <span class="card-title">Country</span>
+                <div class='chart-container' >
+                    <div id='country' ></div>
+                </div>
+              </div>
+          
+            </div>
+          </div>
+
+
+        <div class="col s12 l3">
+            <div class="card teal   lighten-5">
+              <div class="card-content  " >
+                <span class="card-title">Month</span>
+                <div class='chart-container' >
+                    <div id='month' ></div>
+                </div>
+              </div>
+           
+            </div>
+          </div>
+
+
+        <div class="col s12 l3">
+            <div class="card teal   lighten-5">
+              <div class="card-content  " >
+                <span class="card-title">Employeer</span>
+                <div class='chart-container' >
+                    <div id='employeer' ></div>
+                </div>
+              </div>
+            
+            </div>
+          </div>
+
+
 
   <script>
     d3.json("data.json", d => {
       var ndx = crossfilter(d);
 
+    
       var siteDim = ndx.dimension(d => d.site);
       var siteTotal = siteDim.group().reduceSum(d => +d.payment);
 
@@ -36,12 +119,17 @@
       var monthDimension = ndx.dimension(d => d.month)
       var monthTotal = monthDimension.group().reduceSum(d => +d.payment)
 
+      var employeerDim = ndx.dimension(d => d.employeer)
+      var employeerTotal = employeerDim.group().reduceSum(d => +d.payment)
+
       var siteChart = dc.pieChart('#site');
       siteChart.dimension(siteDim)
         .group(siteTotal)
         .width(200)
         .height(200)
         .innerRadius(30)
+        .ordering(function(d){ return -d.value })
+
 
       var freelancerChart = dc.pieChart('#freelancer');
       freelancerChart.dimension(freelancerDim)
@@ -49,6 +137,7 @@
         .width(200)
         .height(200)
         .innerRadius(30)
+        .ordering(function(d){ return -d.value })
 
       var countryChart = dc.pieChart('#country');
       countryChart.dimension(countryDim)
@@ -56,17 +145,33 @@
         .width(200)
         .height(200)
         .innerRadius(30)
+        .ordering(function(d){ return -d.value })
 
 
       var monthChart = dc.barChart('#month');
-      monthChart.width(600)
+      monthChart.width(300)
         .height(200)
         .dimension(monthDimension)
         .group(monthTotal)
         .x(d3.scale.ordinal())
         .xUnits(dc.units.ordinal)
+        .ordering(function(d){ return -d.value })
+
+        var employeerChart = dc.pieChart('#employeer');
+        employeerChart.dimension(employeerDim)
+        .group(employeerTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+        .ordering(function(d){ return -d.value })
 
       dc.renderAll();
+
+      dc.tooltipMixin(siteChart);
+      dc.tooltipMixin(freelancerChart);
+      dc.tooltipMixin(countryChart);
+      dc.tooltipMixin(monthChart);
+      dc.tooltipMixin(employeerChart);
 
     })
 
