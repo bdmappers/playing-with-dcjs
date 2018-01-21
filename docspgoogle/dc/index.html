@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <script src="libs/tabletop.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="crossfilter.js"></script>
+  <script src="dc.js"></script>
+  <script src="dc-tooltip-mixin.js"></script>
+  <script src="d3-tip.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="dc-tooltip-mixin.css">
+
+  <link rel="stylesheet" type="text/css" href="dc.css">
+  <style>
+    body div svg {
+      overflow: visible;
+    }
+
+    body>div {
+      margin: 40px;
+    }
+
+    body {
+      margin: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id='site'>
+    <h1>
+      Age range
+    </h1>
+  </div>
+  <div id='freelancer'>
+    <h1>
+      Marital Status
+    </h1>
+  </div>
+  <div id='country'>
+    <h1>
+      Educational 
+    </h1>
+  </div>
+  <div id='month'>
+    <h1>
+      Gender
+    </h1>
+  </div>
+
+  <script>
+
+    var sheetUrl = "https://docs.google.com/spreadsheets/d/1P7HSgDv-AAvtPQwkcSp3Vp6tsFuIK9uwJd8HMH-_xco/edit#gid=1829527480";
+
+    var logEnabled = true;
+
+    function log(item) {
+      if (logEnabled) {
+        console.log(item);
+      }
+    }
+
+    function init() {
+      log('--------------------- INIT --------------------')
+      Tabletop.init({
+        key: sheetUrl,
+        callback: showInfo,
+        simpleSheet: true
+      })
+    }
+
+    function showInfo(data, tabletop) {
+      // log('--------------------- SHOW_INFO --------------------')
+
+      console.log(data);
+
+      var ndx = crossfilter(data);
+
+      var ageRange = ndx.dimension(d => d["Age range"]);
+      var ageRangeTotal = ageRange.group().reduceCount();
+
+      var relationshipDim = ndx.dimension(d => d["Relationship status"]);
+      var relationshipTotal = relationshipDim.group().reduceCount();
+
+      var educationDegreeDim = ndx.dimension(d => d["Education degree"]);
+      var educationDegreeTotal = educationDegreeDim.group().reduceCount();
+
+      var genderDimension = ndx.dimension(d => d["Gender"])
+      var genderTotal = genderDimension.group().reduceCount()
+
+      var siteChart = dc.pieChart('#site');
+      siteChart.dimension(ageRange)
+        .group(ageRangeTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+      var freelancerChart = dc.pieChart('#freelancer');
+      freelancerChart.dimension(relationshipDim)
+        .group(relationshipTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+      var countryChart = dc.pieChart('#country');
+      countryChart.dimension(educationDegreeDim)
+        .group(educationDegreeTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+
+      var monthChart = dc.pieChart('#month');
+      monthChart.dimension(genderDimension)
+        .group(genderTotal)
+        .width(200)
+        .height(200)
+        .innerRadius(30)
+
+
+
+      dc.renderAll();
+      dc.tooltipMixin(siteChart);
+      dc.tooltipMixin(freelancerChart);
+      dc.tooltipMixin(countryChart);
+      dc.tooltipMixin(monthChart);
+
+
+    }
+
+    init();
+
+
+
+
+
+
+
+    function print_filter(filter) {
+      if (typeof filter != 'function') console.log(filter);
+      var f = filter;
+      if (typeof (f.length) != "undefined") { } else { }
+      if (typeof (f.top) != "undefined") { f = f.top(Infinity); } else { }
+      if (typeof (f.dimension) != "undefined") { f = f.dimension(function (d) { return ""; }).top(Infinity); } else { }
+      console.table(f);
+    }
+
+  </script>
+</body>
+
+</html>

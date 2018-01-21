@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Tree Chart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="styles/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
+</head>
+
+<body translate="no">
+
+
+
+  <ul id="tabs-swipe-demo" class="tabs">
+    <li class="tab col s3">
+      <a class="active" href="#phone-links">Phone Links</a>
+    </li>
+    <li class="tab col s3">
+      <a href="#contact-sales">Contact Sales </a>
+    </li>
+    <li class="tab col s3">
+      <a href="#my-kb">My KB</a>
+    </li>
+  </ul>
+  <div id="phone-links" class="col s12 ">
+    <div class="loader">Loading...</div>
+    <div id="myGraph"></div>
+  </div>
+  <div id="contact-sales" class="col s12 ">Contact Sales </div>
+  <div id="my-kb" class="col s12 ">My KB </div>
+
+
+
+  <!-- Compiled and minified CSS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+  <script src="libs/d3.v4.min.js"></script>
+  <script src="scripts/d3script.js"></script>
+  <script src="libs/tabletop.min.js"></script>
+  <script src="scripts/customTooltip.js"></script>
+
+  <script>
+
+    var sheetUrl = "https://docs.google.com/spreadsheets/d/1ok07Is3h61CM3xWYpcX7o3O3w1N6z4ZQ83y_V5Z-17E/edit#gid=0";
+
+    var logEnabled = true;
+
+    function log(item) {
+      if (logEnabled) {
+        console.log(item);
+      }
+    }
+
+    function init() {
+      log('--------------------- INIT --------------------')
+      Tabletop.init({
+        key: sheetUrl,
+        callback: showInfo,
+        simpleSheet: true
+      })
+    }
+
+    function showInfo(data, tabletop) {
+      // log('--------------------- SHOW_INFO --------------------')
+
+
+      removeLoader();
+      var splitted = splitStringPaths(data);
+
+      var newData = buildPathForConsistency(splitted);
+
+      var props = Object.keys(data[0]).filter(d => d.indexOf('PATH1') != -1);
+
+      var tempData = data.groupBy(['PATH1']);
+      var grouped = tempData;
+      debugger;
+
+      props.forEach((prop, i) => {
+        if (i > 0) {
+          grouped = grouped.map(d => {
+            if (d.children) {
+              d.children = d.children.groupBy([prop]);
+              return d.children
+            }
+          })
+            .filter(d => d)
+            .reduce((a, b) => a.concat(b))
+        }
+      });
+
+      tempData.forEach(removeEmptyChildren)
+
+      var treeData = {
+        "name": "Top Level",
+        "children": tempData,
+        "value": d3.sum(tempData, d => d.value),
+        "fullName": '/',
+        "maxPathValue": d3.max(tempData, d => d.value)
+      };
+
+      var chart = renderTreeChart()
+        .svgHeight(window.innerHeight - 30)
+        .svgWidth(window.innerWidth - 30)
+        .container('#myGraph')
+        .data(treeData)
+        .debug(true)
+        .run()
+    }
+
+    function splitStringPaths(data) {
+      var splittedPaths = data.map(function (d) {
+        d['PATH'] = d['PATH'].split(' | ');
+        return d;
+      });
+
+      return splittedPaths;
+    }
+
+    function removeLoader() {
+      d3.selectAll('.loader').remove();
+      document.body.style.backgroundColor = "#FFFFFF";
+    }
+
+    init();
+
+    Array.prototype.groupBy = function (props, groupProp) {
+      var arr = this;
+      var partialResult = {};
+      if (!props) return
+
+      arr.forEach(el => {
+
+        var grpObj = {};
+
+        props.forEach(prop => {
+          grpObj[prop] = el[prop]
+        });
+
+        var key = JSON.stringify(grpObj);
+
+        if (!partialResult[key]) partialResult[key] = [];
+
+        partialResult[key].push(el);
+
+      });
+
+      var finalResult = Object.keys(partialResult).map(key => {
+        var keyObj = JSON.parse(key);
+        var keyObjKey = Object.keys(keyObj)[0];
+        var regResult = /\/([a-zA-Z0-9\\-]*)\?\/$/g.exec(keyObj[keyObjKey])
+
+        keyObj.level = keyObjKey;
+        keyObj.name = regResult ? regResult[1].replace(/-/g, ' ') : "";
+        keyObj.fullName = keyObj[keyObjKey]
+        keyObj.children = partialResult[key];
+        keyObj.value = d3.sum(keyObj.children, d => d["FREQUENCY"])
+
+        return keyObj;
+      })
+
+      return finalResult;
+    }
+
+    function removeEmptyChildren(d) {
+      if (d.children) {
+        d.children.forEach((ch, i) => {
+          if (!ch.fullName) {
+            d.children.splice(i, 1)
+          }
+          else {
+            removeEmptyChildren(ch)
+          }
+        })
+
+        if (d.children.length == 0) {
+          d.children = null;
+
+        }
+      }
+    }
+
+
+  </script>
+</body>
+
+</html>
